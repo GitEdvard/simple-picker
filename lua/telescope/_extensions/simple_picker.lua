@@ -5,8 +5,7 @@ local actions = require("telescope.actions")
 local conf = require("telescope.config").values
 local action_set = require("telescope.actions.set")
 local action_state = require("telescope.actions.state")
-local trigger_callbacks = require("run-configs")
-
+local callback_handler = require("simple-picker")
 
 local get_selected_text = function(prompt_bufnr)
     local selection = action_state.get_selected_entry(prompt_bufnr)
@@ -18,16 +17,16 @@ local trigger_actions = function(prompt_bufnr)
   actions.close(prompt_bufnr)
   local metadata = { ["text"] = selection }
   if selection ~= nil then
-    trigger_callbacks.emit_on_change(metadata)
+    callback_handler.emit_on_change(metadata)
   end
 end
 
-local run_config_fnc = function(opts)
+local simple_picker_fnc = function(opts)
   opts = opts or {}
-  local output = {}
-  for file in io.popen([[dir "run-configs" /b]]):lines() do 
-    table.insert(output, file) 
-  end
+  -- local opts.entries = {}
+  -- for file in io.popen([[dir "run-configs" /b]]):lines() do 
+  --   table.insert(opts.entries, file) 
+  -- end
   local results = {}
   local widths = {
     text = 0,
@@ -45,7 +44,7 @@ local run_config_fnc = function(opts)
     table.insert(results, index, entry)
   end
 
-  for _, line in ipairs(output) do
+  for _, line in ipairs(opts.entries) do
     parse_line(line)
   end
 
@@ -67,7 +66,8 @@ local run_config_fnc = function(opts)
   end
 
   pickers.new(opts or {}, {
-      prompt_title = "Run configurations",
+      prompt_title = opts.title or "Pick something",
+      -- prompt_title = "Run configurations",
       finder = finders.new_table {
           results = results,
           entry_maker = function(entry)
@@ -88,6 +88,6 @@ end
 return require("telescope").register_extension(
            {
         exports = {
-            run_configs = run_config_fnc
+            simple_picker = simple_picker_fnc
         }
     })
